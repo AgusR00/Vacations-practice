@@ -1,76 +1,50 @@
-// Set the start date - using format YYYY-MM-DD for reliability
-const startDate = new Date("2023-04-07T00:00:00")
+// Set the target date - February 28, 2026
+const targetDate = new Date("2026-02-28T00:00:00")
 
 function updateCounter() {
   const currentDate = new Date()
 
-  // Forzar que la comparación sea precisa usando fechas sin zona horaria
-  const startYear = startDate.getFullYear()
-  const startMonth = startDate.getMonth()
-  const startDay = startDate.getDate()
+  // Calculate difference in milliseconds
+  const diffMs = targetDate - currentDate
 
-  const currentYear = currentDate.getFullYear()
-  const currentMonth = currentDate.getMonth()
-  const currentDay = currentDate.getDate()
-
-  // Verificar explícitamente si ya pasamos el aniversario este año
-  const isPastAnniversaryDay = currentMonth > startMonth || (currentMonth === startMonth && currentDay >= startDay)
-
-  // Calcular años completos
-  let years = currentYear - startYear
-  if (!isPastAnniversaryDay) {
-    years = years - 1
+  // If the date has passed
+  if (diffMs <= 0) {
+    document.getElementById("counter").innerHTML = "¡Ya llegó el día!"
+    return
   }
 
-  // Calcular meses y días restantes
+  // Calculate time units
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
+
+  // Calculate months and remaining days
+  const tempDate = new Date(currentDate)
   let months = 0
-  let days = 0
+  let remainingDays = days
 
-  if (isPastAnniversaryDay) {
-    // Si ya pasamos el aniversario este año
-    months = currentMonth - startMonth
-    days = currentDay - startDay
-  } else {
-    // Si aún no llegamos al aniversario este año
-    months = currentMonth + 12 - startMonth
-    if (currentDay >= startDay) {
-      days = currentDay - startDay
-    } else {
-      // Obtener días del mes anterior
-      const lastDayPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
-      months = months - 1
-      days = currentDay + (lastDayPrevMonth - startDay)
-    }
+  while (tempDate.getTime() + 30 * 24 * 60 * 60 * 1000 <= targetDate.getTime()) {
+    months++
+    tempDate.setMonth(tempDate.getMonth() + 1)
   }
 
-  // Ajustar meses si es necesario
-  if (months === 12) {
-    months = 0
-  }
+  // Recalculate remaining days after extracting months
+  const diffMsAfterMonths = targetDate - tempDate
+  remainingDays = Math.floor(diffMsAfterMonths / (1000 * 60 * 60 * 24))
 
-  // Calcular horas y minutos
-  const hours = currentDate.getHours()
-  const minutes = currentDate.getMinutes()
-
-  // Pluralización correcta
-  const yearText = years === 1 ? "año" : "años"
+  // Correct pluralization in Spanish
   const monthText = months === 1 ? "mes" : "meses"
-  const dayText = days === 1 ? "día" : "días"
+  const dayText = remainingDays === 1 ? "día" : "días"
   const hourText = hours === 1 ? "hora" : "horas"
   const minuteText = minutes === 1 ? "minuto" : "minutos"
+  const secondText = seconds === 1 ? "segundo" : "segundos"
 
-  // Construir mensaje
-  document.getElementById("counter").innerHTML = `Estamos juntos hace:<br>
-    ${years} ${yearText}, ${months} ${monthText}, ${days} ${dayText}, ${hours} ${hourText} y ${minutes} ${minuteText}.<br>
-    Y espero que sea mucho tiempo más ❤️`
-
-  // Para depuración - puedes eliminar esto en producción
-  console.log(`Fecha actual: ${currentDate}`)
-  console.log(`¿Pasó el aniversario este año?: ${isPastAnniversaryDay}`)
-  console.log(`Años: ${years}, Meses: ${months}, Días: ${days}`)
+  // Build message without years
+  document.getElementById("counter").innerHTML = `Faltan:<br>
+    ${months} ${monthText}, ${remainingDays} ${dayText}, ${hours} ${hourText}, ${minutes} ${minuteText} y ${seconds} ${secondText}.`
 }
 
 // Update counter immediately and then every second
 updateCounter()
 setInterval(updateCounter, 1000)
-
